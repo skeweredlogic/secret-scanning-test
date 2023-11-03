@@ -1,0 +1,28 @@
+name: TruffleHog Secrets Scan
+on: [workflow_call,pull_request]
+jobs:
+  TruffleHog:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - uses: andstor/file-existence-action@v2
+        id: check_ignore_file
+        with:
+          files: .truffleignore
+      - id: set_extra_args
+        env:
+          IGNORE_FILE_PRESENT: ${{ steps.check_ignore_file.outputs.files_exists }}
+        run: |
+          EXTRA_ARGS="--debug --trace --no-verification"
+          if [ $IGNORE_FILE_PRESENT = "true" ]; then EXTRA_ARGS="${EXTRA_ARGS} -x .truffleignore"; fi
+          echo "extra_args=${EXTRA_ARGS}" >> $GITHUB_OUTPUT
+      - name: TruffleHog OSS
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+          extra_args: ${{ steps.set_extra_args.outputs.extra_args }}
