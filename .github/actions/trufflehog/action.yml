@@ -1,0 +1,34 @@
+name: Trufflehog Action
+description: "Trufflehog Action"
+inputs:
+  verify:
+    description: "to verify or not to verify?"
+    required: false
+    default: "false"
+  only_verified:
+    description: "report only verified?"
+    required: false
+    default: "false"
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - id: set_extra_args
+      env:
+        VERIFY: ${{ inputs.verify }}
+        ONLY_VERIFIED: ${{ inputs.only_verified }}
+      run: |
+          EXTRA_ARGS="--debug"
+          if [ $VERIFY = "false" ]; then EXTRA_ARGS="${EXTRA_ARGS} --no-verification"; fi
+          if [ $ONLY_VERIFIED = "true" ]; then EXTRA_ARGS="${EXTRA_ARGS} --only-verified"; fi
+          echo "extra_args=${EXTRA_ARGS}" >> $GITHUB_OUTPUT
+      shell: bash
+    - name: Trufflehog
+      uses: trufflesecurity/trufflehog@main
+      with:
+        path: ./
+        base: ${{ github.event.repository.default_branch }}
+        head: HEAD
+        extra_args: ${{ steps.set_extra_args.outputs.extra_args }}
