@@ -20,7 +20,4 @@ name: TruffleHog Secrets Scan
 on: [pull_request]
 jobs:
   TruffleHog:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Secrets Check
-        uses: skeweredlogic/secret-scanning-test/.github/actions/trufflehog@main
+    uses: skeweredlogic/secret-scanning-test/.github/workflows/trufflehog_base.yml@secret_test
